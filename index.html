@@ -3,24 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRAC-BOMA Contract Dashboard Tracker</title>
-    <!-- Tailwind CSS -->
+    <title>The Atrium Fit-Out - Master Snag List Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        navy: { 800: '#1e3a8a', 900: '#1F497D', 950: '#0f172a' },
-                        brand: { 500: '#f97316', 600: '#ea580c' }
+                        brac: { 50: '#fff0f8', 100: '#ffe0ef', 200: '#ffc2df', 400: '#f04a9f', 700: '#bd006c', 800: '#990057', 900: '#760044', 950: '#480029' },
+                        brand: { 500: '#ec008c', 600: '#c90073' }
                     }
                 }
             }
         }
     </script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -31,932 +28,551 @@
 </head>
 <body class="h-full bg-slate-100 text-slate-800 antialiased flex flex-col">
 
-    <!-- Mobile Drawer Overlay -->
-    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/60 z-30 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
-
-    <!-- Top Navigation Header -->
-    <header class="bg-navy-900 text-white px-4 lg:px-6 py-3 lg:py-4 flex flex-wrap items-center justify-between border-b border-navy-800 shadow-md shrink-0 z-40">
+    <header class="bg-brac-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between border-b border-brac-800 shadow-md shrink-0 gap-3">
         <div class="flex items-center space-x-3">
-            <button onclick="toggleMobileSidebar()" class="lg:hidden text-white hover:text-brand-500 p-1.5 focus:outline-none">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-            <div class="bg-brand-500 text-white p-2 lg:p-2.5 rounded-xl shadow">
-                <i class="fa-solid fa-shield-halved text-lg lg:text-xl"></i>
+            <div class="bg-white p-1.5 rounded-xl shadow shrink-0">
+                <img src="brac-logo.png" alt="BRAC" class="w-24 sm:w-28 h-auto">
             </div>
             <div>
-                <h1 class="font-bold text-sm lg:text-lg leading-tight">BRAC-BOMA CONTRACT DASHBOARD TRACKER</h1>
-                <p class="text-[10px] lg:text-xs text-slate-300">Africa Regional Office Fit-Out (The Atrium, Hurlingham - 7,880 sq ft)</p>
+                <h1 class="font-bold text-base sm:text-lg leading-tight">The Atrium Fit-Out - Master Snag List Tracker</h1>
+                <p class="text-[11px] sm:text-xs text-slate-300">Africa Regional Office (Hurlingham - 7,880 sq ft | BoQ V6 & Option 04)</p>
             </div>
         </div>
-
-        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
-            <span class="text-[10px] lg:text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5">
-                <i class="fa-solid fa-clock text-xs"></i>
-                Stage: Pre-Commencement Approval
-            </span>
-            <button id="btn-lock-all" onclick="lockAllSessions()" class="hidden bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors shadow flex items-center space-x-1">
-                <i class="fa-solid fa-lock"></i>
-                <span class="hidden sm:inline">Lock Active Sessions</span>
-            </button>
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <span id="sync-status" class="text-xs text-slate-300 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl font-mono flex items-center space-x-1.5"><i class="fa-solid fa-spinner fa-spin"></i><span>Syncing...</span></span>
+            <button onclick="loadFromCloud(true)" title="Refresh from Google Sheet & Drive" class="bg-brac-800 hover:bg-brac-700 text-white text-xs px-3 py-2 rounded-xl shadow"><i class="fa-solid fa-rotate"></i></button>
         </div>
     </header>
 
-    <!-- Main Workspace Frame -->
-    <div class="flex-1 flex overflow-hidden relative">
-
-        <!-- Sidebar Navigation (Responsive Drawer) -->
-        <aside id="sidebar-drawer" class="fixed lg:static inset-y-0 left-0 w-72 lg:w-80 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40">
-            <nav class="p-4 space-y-2 overflow-y-auto custom-scrollbar">
-                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 flex justify-between items-center">
-                    <span>Workspaces Navigation</span>
-                    <button onclick="toggleMobileSidebar()" class="lg:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-                </div>
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        <aside class="w-full lg:w-80 bg-slate-900 text-slate-300 flex flex-col justify-between shrink-0 border-r border-slate-800">
+            <nav class="p-3 sm:p-4 space-y-2 overflow-y-auto custom-scrollbar flex lg:flex-col flex-row gap-2">
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1 hidden lg:block">Master Workspaces</div>
                 
-                <button onclick="switchTab('docs')" id="nav-docs" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold bg-navy-900 text-white shadow-md transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-folder-open text-brand-500 text-base"></i>
-                        <span class="text-left">1) BOMA-BRAC Documentation Approvals</span>
+                <button onclick="switchWorkspace('base')" id="nav-base" class="flex-1 lg:flex-none flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl text-xs font-semibold bg-brac-900 text-white shadow-md transition-all">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <i class="fa-solid fa-layer-group text-brand-500 text-base"></i>
+                        <span class="text-left truncate">1) Base Floor Works (BoQ V6)</span>
                     </div>
-                    <span id="badge-docs" class="bg-navy-800 text-xs px-2 py-0.5 rounded-full font-mono">0</span>
+                    <span id="badge-base" class="bg-brac-950 text-xs px-2 py-0.5 rounded-full font-mono">0</span>
                 </button>
 
-                <button onclick="switchTab('contract')" id="nav-contract" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-list-check text-blue-400 text-base"></i>
-                        <span class="text-left">2) Contract Tracker (BoQ Phases)</span>
+                <button onclick="switchWorkspace('rooms')" id="nav-rooms" class="flex-1 lg:flex-none flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <i class="fa-solid fa-building text-amber-400 text-base"></i>
+                        <span class="text-left truncate">2) Room Audit (ToR & Option 04)</span>
                     </div>
-                    <span class="bg-slate-800 text-xs px-2 py-0.5 rounded-full font-mono">18</span>
-                </button>
-
-                <button onclick="switchTab('internal')" id="nav-internal" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-user-lock text-amber-400 text-base"></i>
-                        <span class="text-left">3) BRAC Internal Tracker (ToR Specs)</span>
-                    </div>
-                    <i id="lock-icon-internal" class="fa-solid fa-lock text-amber-400 text-xs"></i>
-                </button>
-
-                <button onclick="switchTab('payments')" id="nav-payments" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-sack-dollar text-emerald-400 text-base"></i>
-                        <span class="text-left">4) Procurement & Payments</span>
-                    </div>
-                    <i id="lock-icon-payments" class="fa-solid fa-lock text-emerald-400 text-xs"></i>
+                    <span id="badge-rooms" class="bg-slate-800 text-xs px-2 py-0.5 rounded-full font-mono">0</span>
                 </button>
             </nav>
 
-            <!-- Bottom Project Summary -->
-            <div class="p-4 bg-slate-950 border-t border-slate-800 text-xs space-y-2">
+            <div class="p-4 bg-slate-950 border-t border-slate-800 text-xs space-y-2 hidden lg:block">
                 <div class="flex items-center justify-between">
-                    <span class="text-slate-400 font-semibold">Settled V6 BoQ</span>
-                    <span class="text-emerald-400 font-bold bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded">Option 04 Layout</span>
+                    <span class="text-slate-400 font-semibold">Overall Snag Status</span>
+                    <span id="completion-rate" class="text-emerald-400 font-bold bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded">0% Resolved</span>
                 </div>
-                <div class="text-slate-300 text-[11px] leading-relaxed">
-                    Total Budget: <strong class="text-white font-mono">KES 24,782,414</strong><br>
-                    Disbursed To Date: <strong class="text-rose-400 font-mono">KES 0 (0%)</strong><br>
-                    <span class="text-slate-400">(Incl. 16% VAT KES 3,418,264)</span>
+                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
+                    <div id="progress-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Dashboard Workspace -->
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100">
-            <div class="flex-1 p-4 lg:p-6 overflow-y-auto space-y-6 custom-scrollbar" id="main-content">
-                <!-- Content Injected via JS -->
-            </div>
+            <div id="cloud-banner" class="hidden bg-rose-600 text-white text-xs font-semibold px-4 py-2.5"></div>
+            <div class="flex-1 p-3 sm:p-6 overflow-y-auto space-y-6 custom-scrollbar" id="main-content"></div>
         </main>
     </div>
 
-    <!-- Security PIN Modal -->
-    <div id="pin-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 text-center p-6 space-y-4">
-            <div id="pin-icon-box" class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <div>
-                <h3 id="pin-title" class="font-bold text-slate-900 text-lg">PIN Authentication Required</h3>
-                <p id="pin-desc" class="text-xs text-slate-500 mt-1">Enter authorized security PIN to unlock this restricted workspace.</p>
-            </div>
-            <form onsubmit="verifyPIN(event)" class="space-y-4">
-                <input type="password" id="pin-input" placeholder="Enter Security PIN" autocomplete="off" required class="w-full text-center tracking-widest font-mono text-xl py-3 border border-slate-300 rounded-xl bg-slate-50 focus:outline-none focus:border-navy-900 focus:bg-white">
-                <p id="pin-error" class="text-xs text-rose-600 font-semibold hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Invalid PIN passcode. Access denied.</p>
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="closePinModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold text-xs">Cancel</button>
-                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-xs shadow">Unlock View</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Link Modal -->
-    <div id="link-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 p-6 space-y-4">
-            <h3 class="font-bold text-slate-900 text-base">Add Documentation Link / Reference</h3>
-            <form onsubmit="saveDocLink(event)" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Document Title</label>
-                    <input type="text" id="link-title" placeholder="e.g. Approved ToR Option 04 Guidelines" required class="w-full border rounded-xl p-2.5 text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Link</label>
-                    <input type="url" id="link-url" placeholder="https://..." required class="w-full border rounded-xl p-2.5 text-xs">
-                </div>
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeLinkModal()" class="px-3 py-2 bg-slate-200 text-slate-700 text-xs rounded-xl font-semibold">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-navy-900 text-white text-xs rounded-xl font-semibold shadow">Add Link</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- File Preview Modal -->
-    <div id="file-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 p-6 space-y-4">
+    <div id="preview-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 p-6 space-y-4">
             <div class="flex items-center justify-between border-b pb-3">
-                <h3 id="file-modal-title" class="font-bold text-slate-900 text-base">Document Preview</h3>
-                <button onclick="closeFileModal()" class="text-slate-400 hover:text-slate-700 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                <h3 id="preview-title" class="font-bold text-slate-900 text-base">Defect Photo / Cloud Evidence</h3>
+                <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div id="file-modal-content" class="min-h-[250px] max-h-[450px] overflow-y-auto flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 p-4 text-xs">
-            </div>
-            <div class="flex justify-end pt-2">
-                <button onclick="closeFileModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl">Close</button>
-            </div>
+            <div id="preview-body" class="min-h-[220px] flex items-center justify-center bg-slate-50 rounded-xl p-4"></div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-navy-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50 border border-slate-700">
+    <div id="toast" class="fixed bottom-6 right-6 bg-brac-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50 border border-slate-700">
         <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
-        <span id="toast-message">Action processed successfully.</span>
+        <span id="toast-message">Action saved successfully.</span>
     </div>
 
-    <!-- Application Script Logic -->
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxj3XzJXxvzvgb2zxwVRNFFvCriCsUOpBmidcWJ6d2wnY1wWjO-y3rCgvrtu7rZqhYq/exec";
+        let currentWorkspace = 'base';
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcZ2rvOPwTD27WozstoEjdqBSae540HKnHzPIC5LW_dG0X8R5SK_uaXmncH4x11_yFgw/exec";
+        const MAX_PHOTOS = 5;
+        const CACHE_KEY = 'brac_snag_cloud_cache_v7';
 
-        let activeTab = 'docs';
-        let isBRACAuthenticated = false;
-        let isPaymentsAuthenticated = false;
-        let targetAuthTarget = null;
+        const defaultBaseSnags = [{"id": "BASE-01", "desc": "Self levelling cement screed to existing floor slab", "category": "Civil & Flooring", "status": "Ongoing", "brand": "Custom Cement Mix", "unit": "Sqm", "qty": 745, "contractorNotes": "Screeding in progress across open cluster areas", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Verify moisture level prior to SPC laying", "photos": []}, {"id": "BASE-02", "desc": "Waterproof SPC flooring complete with 100mm skirting", "category": "Civil & Flooring", "status": "Pending", "brand": "Daspros (1220x183mm, 4mm+0.3mm wear + 1.0mm IXPE)", "unit": "Sqm", "qty": 745, "contractorNotes": "Materials delivered to site; awaiting screed drying", "contractorStatus": "Delivered", "bracConfirmation": "Pending Confirmation", "notes": "Check ceramic bead UV coat batch certificates", "photos": []}, {"id": "BASE-03", "desc": "200mm thick masonry stone walling complete with plaster on both sides", "category": "Civil & Masonry", "status": "Completed", "brand": "Local Quarry Stone", "unit": "Sqm", "qty": 20, "contractorNotes": "Masonry walling erected for wet & service boundary", "contractorStatus": "Completed", "bracConfirmation": "Confirmed", "notes": "Plaster finish smooth and level", "photos": []}, {"id": "BASE-04", "desc": "Ceramic tiling to kitchenette walls", "category": "Civil & Finishes", "status": "Not Started", "brand": "Twyford / Equivalent", "unit": "Sqm", "qty": 15, "contractorNotes": "Tiles on order; installation following cabinet prep", "contractorStatus": "Not Started", "bracConfirmation": "Pending Confirmation", "notes": "Confirm tile color alignment with brand palette", "photos": []}, {"id": "BASE-05", "desc": "Gypsum partitioning walls with framing & glass wool insulation (45dB)", "category": "Partitions", "status": "Ongoing", "brand": "Gyproc / Knauf (Glasswool insulated)", "unit": "Sqm", "qty": 500, "contractorNotes": "Stud framing complete in private offices; slab sealing under way", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Ensure acoustic seal at top track to soffit", "photos": []}, {"id": "BASE-06", "desc": "Glass partitioning walls with aluminum framing & frosted privacy film", "category": "Partitions", "status": "Not Started", "brand": "Custom Double Glazed Aluminium", "unit": "Sqm", "qty": 255, "contractorNotes": "Aluminum extrusions on site; glass panels being cut", "contractorStatus": "Framing Ready", "bracConfirmation": "Pending Confirmation", "notes": "Verify frosting height (1200mm to 1800mm band)", "photos": []}, {"id": "BASE-07", "desc": "Acoustic ceiling panels complete with aluminum grid & accessories", "category": "Ceiling", "status": "Ongoing", "brand": "Armstrong (Germany, 600x600x15mm White)", "unit": "Sqm", "qty": 745, "contractorNotes": "Grid hanging active in main open office hall", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Confirm 15mm panel thickness and noise coefficient", "photos": []}, {"id": "BASE-08", "desc": "Timber flush doors complete with frames, shutters & ironmongery", "category": "Doors & Joinery", "status": "Pending", "brand": "Hardwood Flush Doors", "unit": "No", "qty": 2, "contractorNotes": "Frames fixed at store & utility entrances", "contractorStatus": "Frames Fixed", "bracConfirmation": "Pending Confirmation", "notes": "Inspect lockset ironmongery sample", "photos": []}, {"id": "BASE-09", "desc": "Frameless glass doors complete with patch fittings & stainless handles", "category": "Doors & Joinery", "status": "Not Started", "brand": "12mm Toughened Glass", "unit": "No", "qty": 20, "contractorNotes": "Ordered as per final opening site measurements", "contractorStatus": "On Order", "bracConfirmation": "Pending Confirmation", "notes": "Check soft-close floor spring mechanism", "photos": []}, {"id": "BASE-10", "desc": "UPVC double glazed acoustic doors complete with ironmongery", "category": "Doors & Joinery", "status": "Not Started", "brand": "UPVC Acoustic Profile", "unit": "No", "qty": 11, "contractorNotes": "Manufacturing complete; dispatching to site", "contractorStatus": "Dispatched", "bracConfirmation": "Pending Confirmation", "notes": "Ensure double perimeter rubber weatherstripping", "photos": []}, {"id": "BASE-11", "desc": "Kitchen & Mother's room low level counter with granite top & cabinets", "category": "Joinery & Fittings", "status": "Not Started", "brand": "Granite & MDF Marine Board", "unit": "Lm", "qty": 16, "contractorNotes": "Carcass fabrication at workshop", "contractorStatus": "Off-site Fab", "bracConfirmation": "Pending Confirmation", "notes": "Verify polished black granite sample slab", "photos": []}, {"id": "BASE-12", "desc": "Kitchen high level storage cabinets with soft-close hinges", "category": "Joinery & Fittings", "status": "Not Started", "brand": "MDF Marine Board", "unit": "Lm", "qty": 6, "contractorNotes": "Workshop fabrication ongoing", "contractorStatus": "Off-site Fab", "bracConfirmation": "Pending Confirmation", "notes": "Ensure water-resistant edge banding", "photos": []}, {"id": "BASE-13", "desc": "BRAC reception main wall 3D branding design & acrylic installation", "category": "Branding & Signage", "status": "Not Started", "brand": "Custom Acrylic 3D Logo", "unit": "Ls", "qty": 1, "contractorNotes": "Artwork approved by BRAC communications team", "contractorStatus": "Artwork Approved", "bracConfirmation": "Confirmed", "notes": "Verify illuminated backlighting power point", "photos": []}, {"id": "BASE-14", "desc": "Wall skimming, priming & acrylic paint finish (2 coats)", "category": "Finishes & Decor", "status": "Ongoing", "brand": "Crown Paints Silk Finish", "unit": "Sqm", "qty": 1200, "contractorNotes": "First coat primer applied to masonry walls", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Color match shade code with BRAC brand book", "photos": []}, {"id": "BASE-15", "desc": "Zebra Blinds for perimeter open side facing windows", "category": "Finishes & Decor", "status": "Pending", "brand": "Zebra Dual Roller Blinds", "unit": "Sqm", "qty": 132, "contractorNotes": "Measurements taken for all perimeter window bays", "contractorStatus": "Measured", "bracConfirmation": "Pending Confirmation", "notes": "Inspect mechanism smooth operation and light lockout", "photos": []}, {"id": "BASE-16", "desc": "Electrical 1st & 2nd fix points (power, lighting, TV, CCTV, access)", "category": "Electrical MEP", "status": "Ongoing", "brand": "Conduits & Copper Cabling", "unit": "No", "qty": 385, "contractorNotes": "Conduiting complete; wire pulling 60% done", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Ensure separate circuit isolation for IT server line", "photos": []}, {"id": "BASE-17", "desc": "Electrical acoustic ceiling LED panel light fittings (600x600)", "category": "Electrical MEP", "status": "Not Started", "brand": "LED 40W 4000K Neutral White", "unit": "No", "qty": 140, "contractorNotes": "Fixtures delivered; awaiting ceiling grid drop", "contractorStatus": "Delivered", "bracConfirmation": "Pending Confirmation", "notes": "Verify min 500 lux output at desk height", "photos": []}, {"id": "BASE-18", "desc": "Electrical twin power socket outlet fittings (13A switched)", "category": "Electrical MEP", "status": "Not Started", "brand": "Schneider / Crabtree", "unit": "No", "qty": 175, "contractorNotes": "Faceplates on site", "contractorStatus": "Delivered", "bracConfirmation": "Pending Confirmation", "notes": "Check grounding earthing continuity", "photos": []}, {"id": "BASE-19", "desc": "Mains Distribution Boards (DB) rewiring & breaker load balance", "category": "Electrical MEP", "status": "Completed", "brand": "ABB / Schneider Breakers", "unit": "No", "qty": 4, "contractorNotes": "DB boxes rewired, labeled, and balanced", "contractorStatus": "Completed", "bracConfirmation": "Confirmed", "notes": "Test circuit breaker trip ratings", "photos": []}, {"id": "BASE-20", "desc": "CCTV camera system conduiting & CAT6 cabling containment", "category": "ICT & Security", "status": "Ongoing", "brand": "PVC Heavy Conduits", "unit": "Ls", "qty": 1, "contractorNotes": "Conduits laid along ceiling cable trays", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Check camera coverage angle over entrances", "photos": []}, {"id": "BASE-21", "desc": "CAT6A structured cabling & dual data outlet terminations", "category": "ICT & Security", "status": "Ongoing", "brand": "Siemon / Giganet CAT6A", "unit": "No", "qty": 20, "contractorNotes": "Cable runs terminated at server rack patch panel", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Perform Fluke DTX cable certification test", "photos": []}, {"id": "BASE-22", "desc": "ICT Server Room rack setup, patch panels & wire management", "category": "ICT & Security", "status": "Pending", "brand": "42U Server Rack Cabinet", "unit": "Ls", "qty": 1, "contractorNotes": "Server cabinet positioned; rack PDU installed", "contractorStatus": "Set Up", "bracConfirmation": "Pending Confirmation", "notes": "Verify 2kW spare electrical load & grounding", "photos": []}, {"id": "BASE-23", "desc": "Biometric access control doors (fingerprint, maglock, backup PSU)", "category": "ICT & Security", "status": "Not Started", "brand": "ZKTeco / Suprema System", "unit": "No", "qty": 2, "contractorNotes": "Maglocks mounted; wiring to PSU in progress", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Test battery backup override on main power cut", "photos": []}, {"id": "BASE-24", "desc": "Split A/C Unit for Server Room (18,000 BTU 24/7 dedicated)", "category": "Mechanical HVAC", "status": "Pending", "brand": "Haier HSU-18RC23CF (R32)", "unit": "No", "qty": 1, "contractorNotes": "Indoor/outdoor units mounted; piping pending", "contractorStatus": "Mounted", "bracConfirmation": "Pending Confirmation", "notes": "Ensure dual auto-restart module on power restoration", "photos": []}, {"id": "BASE-25", "desc": "Split A/C Unit for Regional Director Office (12,000 BTU)", "category": "Mechanical HVAC", "status": "Not Started", "brand": "Haier HSU-12RC23CF (R32)", "unit": "No", "qty": 1, "contractorNotes": "Unit on site", "contractorStatus": "Delivered", "bracConfirmation": "Pending Confirmation", "notes": "Inspect copper refrigerant pipe insulation", "photos": []}, {"id": "BASE-26", "desc": "Ceiling mounted ventilation fans for enclosed inner offices", "category": "Mechanical HVAC", "status": "Ongoing", "brand": "Tronic 6\" Square 37dB", "unit": "No", "qty": 42, "contractorNotes": "20 units mounted in duct openings", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Check low-noise output (<37dB) in quiet rooms", "photos": []}, {"id": "BASE-27", "desc": "Fire extinguishers (CO2 5kg & Dry Powder 6kg)", "category": "Fire & Safety", "status": "Not Started", "brand": "SafetyXpress Standard", "unit": "No", "qty": 6, "contractorNotes": "Wall brackets mounted", "contractorStatus": "Brackets Ready", "bracConfirmation": "Pending Confirmation", "notes": "Check pressure gauge level & inspection tag", "photos": []}, {"id": "BASE-28", "desc": "Battery operated optical smoke detectors in office ceiling void", "category": "Fire & Safety", "status": "Not Started", "brand": "Optical Smoke Detector", "unit": "No", "qty": 42, "contractorNotes": "Units delivered", "contractorStatus": "Delivered", "bracConfirmation": "Pending Confirmation", "notes": "Test interconnectivity alert alarm sound", "photos": []}, {"id": "BASE-29", "desc": "Emergency exit illuminated signage & emergency light fittings", "category": "Fire & Safety", "status": "Not Started", "brand": "LED Emergency Maintenance", "unit": "No", "qty": 6, "contractorNotes": "Wiring complete at exit doors", "contractorStatus": "Wiring Ready", "bracConfirmation": "Pending Confirmation", "notes": "Verify 3-hour battery backup duration", "photos": []}];
+        const defaultRoomSnags = [{"id": "RM-01", "roomName": "Regional Director Executive Suite", "zone": "Primary Operational", "status": "Ongoing", "brand": "Haier / Gyproc / Daspros", "torSpecs": "Self-contained corner suite, acoustic glass partition (≥45dB), internal washroom, 12k BTU AC", "pax": "1 Pax", "dimensions": "Corner Suite (~25 Sqm)", "contractorNotes": "Glass door mounted; plumbing connection to internal washroom underway", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Ensure complete acoustic isolation around door frame", "photos": []}, {"id": "RM-02", "roomName": "Director, Finance & Operations Office", "zone": "Primary Operational", "status": "Ongoing", "brand": "Gyproc / Tronic / Siemon", "torSpecs": "Acoustic insulation, natural light access, 4 workstations (1400x600mm), power & data drop", "pax": "4 Pax", "dimensions": "Standard Office (~16 Sqm)", "contractorNotes": "Gypsum framing fixed; wiring pulled for 4 desks", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Verify desk spacing permits comfortable chair clearance", "photos": []}, {"id": "RM-03", "roomName": "Director, HR Office", "zone": "Primary Operational", "status": "Ongoing", "brand": "Gyproc / Tronic / Crown Paints", "torSpecs": "Acoustic insulation, natural light, 4 workstations (1400x600mm), lockable file cabinet space", "pax": "4 Pax", "dimensions": "Standard Office (~16 Sqm)", "contractorNotes": "Gypsum board closed; skimming in progress", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Confirm storage cabinet alignment with wall plug", "photos": []}, {"id": "RM-04", "roomName": "Operations Director / Team Office", "zone": "Primary Operational", "status": "Ongoing", "brand": "Siemon / Schneider / Tronic", "torSpecs": "8 workstations (2400x600mm desks), high-density data trunking, ceiling ventilation fan", "pax": "8 Pax", "dimensions": "Large Office (~28 Sqm)", "contractorNotes": "Trunking installed along perimeter wall", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Test dual data sockets at each desk station", "photos": []}, {"id": "RM-05", "roomName": "Director Office - AIM", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Stud framing ready for gypsum boards", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Check natural daylight penetration from main corridor", "photos": []}, {"id": "RM-06", "roomName": "Director Office - UPG&L", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Inspect door swing direction", "photos": []}, {"id": "RM-07", "roomName": "Director Office - Finance & Ops (UPGI)", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Ensure 45dB glasswool batts packed in stud partition", "photos": []}, {"id": "RM-08", "roomName": "Associate Director Office - HR (BI MF)", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Check light switch placement beside entrance frame", "photos": []}, {"id": "RM-09", "roomName": "Head of HR Office - SBI", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Verify data point location near desk cable port", "photos": []}, {"id": "RM-10", "roomName": "Head of HR Office - UPGI", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Confirm ceiling exhaust fan duct connection", "photos": []}, {"id": "RM-11", "roomName": "Director Country Cluster - UPGI", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Inspect plaster skim finish on drywall", "photos": []}, {"id": "RM-12", "roomName": "Head of Finance - SBI", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Tronic 6\"", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Ensure power socket for desk printer/scanner", "photos": []}, {"id": "RM-13", "roomName": "Kenya Country Lead - UPGI", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / Zebra Blinds", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Check window blind fitment on perimeter wall", "photos": []}, {"id": "RM-14", "roomName": "Director Country Cluster - BI MF", "zone": "Primary Operational", "status": "Not Started", "brand": "Gyproc 45dB / UPVC Door", "torSpecs": "Private office, 1400x600mm desk provision, acoustic door, ceiling vent fan", "pax": "1 Pax", "dimensions": "Private Suite (~10 Sqm)", "contractorNotes": "Framing ready", "contractorStatus": "Framing Done", "bracConfirmation": "Pending Confirmation", "notes": "Verify door lock key cylinder system", "photos": []}, {"id": "RM-15", "roomName": "Chief of Staff (CoS) Office (Microfinance Zone)", "zone": "Primary Operational", "status": "Ongoing", "brand": "Gyproc / Crown / Armstrong", "torSpecs": "New private office added per V4/V6 layout adjustments, close to Microfinance team", "pax": "1 Pax", "dimensions": "Private Suite (~11 Sqm)", "contractorNotes": "Gypsum partition walls erected as per V4 plan modification", "contractorStatus": "In Progress", "bracConfirmation": "Confirmed", "notes": "Verify layout position next to Microfinance cluster", "photos": []}, {"id": "RM-16", "roomName": "Open Office Cluster - Programmes", "zone": "Primary Operational", "status": "Ongoing", "brand": "Daspros SPC / Siemon CAT6A", "torSpecs": "Open workspace for 24 pax (6 clusters with 1 extra expansion seat), window facade desk counter", "pax": "24 Pax", "dimensions": "Open Wing (~110 Sqm)", "contractorNotes": "SPC floor screed prepared; cabling trunks laid along floor track", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Ensure low-height furniture used near window to maintain daylight", "photos": []}, {"id": "RM-17", "roomName": "Open Office Cluster - Microfinance", "zone": "Primary Operational", "status": "Ongoing", "brand": "Armstrong LED / Siemon CAT6A", "torSpecs": "Open workspace for 14 pax, CAT6A dual desk outlets, min 500 lux lighting level", "pax": "14 Pax", "dimensions": "Open Wing (~65 Sqm)", "contractorNotes": "Ceiling LED panel light grid hung above cluster zone", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Check spacing between cluster pods and passage walkway", "photos": []}, {"id": "RM-18", "roomName": "Open Office Cluster - UPGI", "zone": "Primary Operational", "status": "Ongoing", "brand": "Schneider / Daspros SPC", "torSpecs": "Open workspace for 11 pax, ergonomic workstation alignment, data floor boxes", "pax": "11 Pax", "dimensions": "Open Wing (~50 Sqm)", "contractorNotes": "Floor conduits pulled to data box positions", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Test floor box cover flushness with SPC tiles", "photos": []}, {"id": "RM-19", "roomName": "Divisible 60-Pax Main Boardroom", "zone": "Primary Operational", "status": "Ongoing", "brand": "Gyproc 45dB / Siemon CAT6A", "torSpecs": "Fixed partition design (V6 Settled), 3 sub-meeting rooms (2 x 10-12 pax, 1 x 20 pax), AV data points", "pax": "60 Pax Total", "dimensions": "Boardroom (~95 Sqm)", "contractorNotes": "Fixed acoustic drywall partitions built in place of folding dividers per V6", "contractorStatus": "In Progress", "bracConfirmation": "Confirmed", "notes": "Confirm AV presentation cabling conduits in central room", "photos": []}, {"id": "RM-20", "roomName": "Quiet Phone Booths / Soundproof Pods (8 Pods)", "zone": "Primary Operational", "status": "Not Started", "brand": "Custom Acoustic 45dB", "torSpecs": "8 soundproof booths (2 pax per pod), ventilation, power socket, >45dB acoustic mitigation", "pax": "16 Pax (2/pod)", "dimensions": "8 Small Pods", "contractorNotes": "Sub-floor wiring prepped; pre-fab pod assembly scheduled", "contractorStatus": "Scheduled", "bracConfirmation": "Pending Confirmation", "notes": "Perform acoustic sound leak check between adjacent pods", "photos": []}, {"id": "RM-21", "roomName": "Main Reception & Visitor Waiting Lounge", "zone": "Primary Operational", "status": "Pending", "brand": "Black Granite / Acrylic 3D Logo", "torSpecs": "Near main entrance, seating for 2-3 visitors, BRAC 3D acrylic branding wall, reception counter", "pax": "3 Visitors", "dimensions": "Entrance Area (~22 Sqm)", "contractorNotes": "Reception desk carcass delivered; wall prep for branding ongoing", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Inspect front counter granite top finish and logo backlighting", "photos": []}, {"id": "RM-22", "roomName": "Dedicated Service & Support Entrance Lobby", "zone": "Service & Support", "status": "Completed", "brand": "ZKTeco Biometric / UPVC Door", "torSpecs": "Separate access door from main reception, independent service entry for deliveries", "pax": "Service Flow", "dimensions": "Lobby Passage", "contractorNotes": "UPVC entrance door fixed with keycard access lock", "contractorStatus": "Completed", "bracConfirmation": "Confirmed", "notes": "Verify smooth swing and clearance for catering trolley carts", "photos": []}, {"id": "RM-23", "roomName": "Staff Cloakroom & Utility Room", "zone": "Service & Support", "status": "Completed", "brand": "Twyford Ceramic / Tronic Vent", "torSpecs": "Dedicated storage & cloakroom for 3 service staff, well-ventilated, durable floor tiles", "pax": "3 Staff", "dimensions": "Utility Room (~12 Sqm)", "contractorNotes": "Tiling complete; coat hooks and storage racks fitted", "contractorStatus": "Completed", "bracConfirmation": "Confirmed", "notes": "Ensure ventilation fan operates continuously", "photos": []}, {"id": "RM-24", "roomName": "Kitchenette & Dining Area", "zone": "Service & Support", "status": "Ongoing", "brand": "Granite Counter / Twyford Sink", "torSpecs": "Granite counter, sink, dishwasher connection, microwave/fridge plugs, dining seating space", "pax": "15 Dining Pax", "dimensions": "Kitchen/Dining (~35 Sqm)", "contractorNotes": "Granite counter slab set; plumbing first fix complete for sink & washer", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Test mechanical exhaust fan airflow over food prep area", "photos": []}, {"id": "RM-25", "roomName": "Mother's Room (Wellness Room)", "zone": "Service & Support", "status": "Ongoing", "brand": "Gyproc 45dB / Soft Lighting", "torSpecs": "Fitted for 3-seater couch, small fridge provision, power point, privacy lock", "pax": "Wellness", "dimensions": "Private Room (~9 Sqm)", "contractorNotes": "Drywall enclosure built; door lock set installed", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Check soft warm lighting fixture & acoustic door seal", "photos": []}, {"id": "RM-26", "roomName": "Lounge Room (Relaxation Area)", "zone": "Service & Support", "status": "Not Started", "brand": "Schneider Power / CAT6A", "torSpecs": "Space for 3-seater couch, bean bags, power & cable TV connectivity points", "pax": "Relaxation", "dimensions": "Lounge (~14 Sqm)", "contractorNotes": "Floor screed complete; wiring pulled for TV point", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Verify comfortable power socket height", "photos": []}, {"id": "RM-27", "roomName": "ICT Server Room (24/7 Cooled)", "zone": "Service & Support", "status": "Ongoing", "brand": "Haier HSU-18RC23CF / Cisco 9200L", "torSpecs": "42U rack space, MikroTik CCR1036 + Cisco 9200L stack, 2kW spare load, Haier 18k BTU A/C", "pax": "IT Hub", "dimensions": "Server Room (~12 Sqm)", "contractorNotes": "Dedicated DB circuit run; Haier A/C unit mounted on wall", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Conduct 24-hour A/C cooling and temperature alarm test", "photos": []}, {"id": "RM-28", "roomName": "General Storage & Future Server Expansion Room", "zone": "Service & Support", "status": "Pending", "brand": "Steel Shelving / Lockset", "torSpecs": "Lockable general storage with electrical load & duct readiness for future server migration", "pax": "Storage", "dimensions": "Store (~16 Sqm)", "contractorNotes": "Heavy duty shelving brackets anchored to masonry wall", "contractorStatus": "In Progress", "bracConfirmation": "Pending Confirmation", "notes": "Confirm lock cylinder key authority distribution", "photos": []}];
 
-        const PIN_BRAC = "AFRICABRAC2026";
-        const PIN_TRACY = "OperationsTracy2026";
+        let baseSnags = JSON.parse(JSON.stringify(defaultBaseSnags));
+        let roomSnags = JSON.parse(JSON.stringify(defaultRoomSnags));
+        baseSnags.forEach(s => s.photos = []);
+        roomSnags.forEach(s => s.photos = []);
 
-        // Persistent Data Storage Arrays
-        let docsBOMA = [];
-        let docsBRAC = [];
+        const uploadErrors = {}; // "ws:ID" -> last upload error text (stays visible until next attempt)
+        const uploading = {};   // "ws:ID" -> number of photos currently uploading
+        let pendingSaves = 0;   // saves/uploads in flight (pauses auto-refresh so nothing is overwritten)
+        let lastSync = null;
+        let firstLoad = true;
 
-        // Workspace 2: Contract Tracker Items (Derived from BoQ Schedule Phases)
-        let boqPhasesData = [
-            { id: "P1-01", phase: "Phase 1: Pre-Construction & Mobilisation", item: "Review site drawings, BoQ, specifications & landlord rules", status: "Pending", confirmed: "Confirmed", comment: "Reviewing NCC permit guidelines" },
-            { id: "P1-02", phase: "Phase 1: Pre-Construction & Mobilisation", item: "3D renders & final site dimensions confirmation", status: "Pending", confirmed: "Confirmed", comment: "Option 04 layout selected" },
-            { id: "P1-03", phase: "Phase 1: Pre-Construction & Mobilisation", item: "Secure contractor approvals (OSHA, NCC, Landlord access)", status: "Pending", confirmed: "Pending Confirmation", comment: "Permit applications in progress" },
-            
-            { id: "P2-01", phase: "Phase 2: Architectural & Interior Works", item: "Gypsum & double-glazed glass office partitions", status: "Pending", confirmed: "Pending Confirmation", comment: "45dB acoustic isolation specified" },
-            { id: "P2-02", phase: "Phase 2: Architectural & Interior Works", item: "Flooring screed, joinery, cabinetry & reception counter", status: "Pending", confirmed: "Pending Confirmation", comment: "Awaiting site possession" },
-            { id: "P2-03", phase: "Phase 2: Architectural & Interior Works", item: "Acoustic treatments, painting & decorative wall finishes", status: "Pending", confirmed: "Pending Confirmation", comment: "Color Palette aligned with brand ToR" },
+        const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const listOf = ws => ws === 'base' ? baseSnags : roomSnags;
+        const findItem = (ws, id) => listOf(ws).find(s => s.id === id);
+        const thumbUrl = (fileId, w) => `https://drive.google.com/thumbnail?id=${fileId}&sz=w${w}`;
 
-            { id: "P3-01", phase: "Phase 3: MEP Works (Electrical, HVAC, Plumbing)", item: "Main DB rewiring, power sockets, isolators & lighting controls", status: "Pending", confirmed: "Pending Confirmation", comment: "High efficiency LED fixtures" },
-            { id: "P3-02", phase: "Phase 3: MEP Works (Electrical, HVAC, Plumbing)", item: "Air conditioning, zonal HVAC adaptation & mechanical exhaust", status: "Pending", confirmed: "Pending Confirmation", comment: "24/7 dedicated Server Room cooling" },
-            { id: "P3-03", phase: "Phase 3: MEP Works (Electrical, HVAC, Plumbing)", item: "Kitchenette plumbing, drainage & washroom installations", status: "Pending", confirmed: "Pending Confirmation", comment: "Auxiliary support zone layout" },
-
-            { id: "P4-01", phase: "Phase 4: ICT Readiness & Structured Cabling", item: "CAT 6A structured cabling & dual data outlets per desk", status: "Pending", confirmed: "Pending Confirmation", comment: "Min 500 lux lighting + data trunks" },
-            { id: "P4-02", phase: "Phase 4: ICT Readiness & Structured Cabling", item: "Server room rack setup, patch panels & MikroTik/Cisco integration", status: "Pending", confirmed: "Pending Confirmation", comment: "MikroTik CCR1036 + Cisco 9200L" },
-            { id: "P4-03", phase: "Phase 4: ICT Readiness & Structured Cabling", item: "Biometric access control & intercom systems installation", status: "Pending", confirmed: "Pending Confirmation", comment: "Secondary service entrance access" },
-
-            { id: "P5-01", phase: "Phase 5: Fire Life Safety & Compliance", item: "Smoke detection, fire alarm integration & emergency lighting", status: "Pending", confirmed: "Pending Confirmation", comment: "Landlord base system link" },
-            { id: "P5-02", phase: "Phase 5: Fire Life Safety & Compliance", item: "Fire extinguishers, safety signage & accessibility compliance", status: "Pending", confirmed: "Pending Confirmation", comment: "NCC safety audit compliant" },
-
-            { id: "P6-01", phase: "Phase 6: Completion, Testing & Handover", item: "Deep site cleaning & debris removal", status: "Pending", confirmed: "Pending Confirmation", comment: "Scheduled pre-occupancy" },
-            { id: "P6-02", phase: "Phase 6: Completion, Testing & Handover", item: "Testing, commissioning & joint snag list resolution", status: "Pending", confirmed: "Pending Confirmation", comment: "BRAC & BOMA joint audit" },
-            { id: "P6-03", phase: "Phase 6: Completion, Testing & Handover", item: "As-built drawings, O&M manuals & 12-month DLP commencement", status: "Pending", confirmed: "Pending Confirmation", comment: "Final signoff" }
-        ];
-
-        // Workspace 3: Internal Deliberations & ToR Spatial Requirements
-        let internalDeliberations = [
-            { id: "INT-01", topic: "Pre-Commencement Procurement Approval", owner: "Procurement / Tracy", status: "In Progress", notes: "Finalizing contractor evaluation and procurement approval.", docLink: "", uploader: "" },
-            { id: "INT-02", topic: "Option 04 Spatial Plan Realignment", owner: "Spatial / BRAC Lead", status: "Approved", notes: "Operational zone (7,880 sq ft) split into primary & service zones.", docLink: "", uploader: "" },
-            { id: "INT-03", topic: "Regional Director Executive Suite", owner: "Executive Team", status: "Approved", notes: "Includes self-contained washroom & double-glazed acoustic glass.", docLink: "", uploader: "" },
-            { id: "INT-04", topic: "Departmental Open Clusters", owner: "Programmes / UPGI / MF", status: "Approved", notes: "Programmes (24 pax), Microfinance (14 pax), UPGI (11 pax).", docLink: "", uploader: "" },
-            { id: "INT-05", topic: "60-Pax Divisible Boardroom ToR", owner: "Operations / IT", status: "Approved", notes: "Movable hotel-style partitions splitting into 4 x 10-pax rooms.", docLink: "", uploader: "" },
-            { id: "INT-06", topic: "Secondary Service Zone Facilities", owner: "Facilities / Admin", status: "Approved", notes: "Direct catering path, Cloakroom (3 staff), Mother's Room, Server Room.", docLink: "", uploader: "" }
-        ];
-
-        // Workspace 4: Procurement & Financial Tranches
-        let procurementTranches = [
-            { id: 1, title: "Payment 1 - Advance Payment (20%)", amount: "KES 4,956,483", status: "Pending Invoice / Pre-Commencement", action: "Offset Status: KES 0 Disbursed", doc: "", uploader: "", comments: "" },
-            { id: 2, title: "Payment 2 - Design & Approvals (40%)", amount: "KES 9,912,966", status: "Scheduled", action: "Offset Status: KES 0 Disbursed", doc: "", uploader: "", comments: "" },
-            { id: 3, title: "Payment 3 - 50% Work Progress (25%)", amount: "KES 6,195,604", status: "Scheduled", action: "Offset Status: KES 0 Disbursed", doc: "", uploader: "", comments: "" },
-            { id: 4, title: "Payment 4 - 100% Completion (10%)", amount: "KES 2,478,241", status: "Scheduled", action: "Offset Status: KES 0 Disbursed", doc: "", uploader: "", comments: "" },
-            { id: 5, title: "Payment 5 - Retention Release (5%)", amount: "KES 1,239,120", status: "Future Retention", action: "Offset Status: KES 0 Disbursed", doc: "", uploader: "", comments: "" }
-        ];
-
-        function toggleMobileSidebar() {
-            const drawer = document.getElementById('sidebar-drawer');
-            const overlay = document.getElementById('sidebar-overlay');
-            drawer.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+        /* ---------- Cloud I/O ---------- */
+        async function fetchWithTimeout(url, opts, ms) {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), ms);
+            try { return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal })); }
+            finally { clearTimeout(t); }
         }
 
-        // Realtime Fetching from Google Sheet API
-        function fetchCloudData() {
-            fetch(APPS_SCRIPT_URL)
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'success' && res.data) {
-                    // Update Workspace 1 Cloud Uploads
-                    if (res.data.docsBoma && res.data.docsBoma.length > 0) {
-                        docsBOMA = [];
-                        docsBRAC = [];
-                        res.data.docsBoma.forEach(row => {
-                            const item = {
-                                id: Date.now() + Math.random(),
-                                name: row["File name"] || "Document",
-                                type: row["File Type"] || "PDF",
-                                format: row["File Type"] || "File",
-                                date: row["Timestamp"] ? new Date(row["Timestamp"]).toISOString().split('T')[0] : '2026-11-04',
-                                size: "Cloud Stored",
-                                data: row["File Data"], // Real Base64 Data String
-                                uploader: row["Uploaded By/ Category"] || "User",
-                                isLink: (row["File Type"] === "URL Link")
-                            };
-                            if (item.uploader.includes("BOMA")) docsBOMA.unshift(item);
-                            else docsBRAC.unshift(item);
-                        });
-                        document.getElementById('badge-docs').innerText = docsBOMA.length + docsBRAC.length;
-                    }
-                    renderActiveWorkspace();
-                }
-            })
-            .catch(err => console.error("Cloud fetch error:", err));
+        async function parseJSONResponse(res) {
+            const text = await res.text();
+            try { return JSON.parse(text); }
+            catch (e) { throw new Error('Google returned a web page instead of data. The script deployment must be set to "Anyone" and updated to a NEW VERSION.'); }
         }
 
-        // Send Data To Google Sheet Backend
-        function syncToGoogleSheets(payload) {
-            fetch(APPS_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+        function friendlyError(err) {
+            const m = (err && err.message) || String(err);
+            if (/Failed to fetch|NetworkError|Load failed|aborted/i.test(m))
+                return 'Could not reach the Google script (no internet, or the deployment is not set to "Anyone"). ' + m;
+            return m;
+        }
+
+        function showBanner(msg) { const b = document.getElementById('cloud-banner'); b.textContent = msg; b.classList.remove('hidden'); }
+        function hideBanner() { document.getElementById('cloud-banner').classList.add('hidden'); }
+
+        async function postJSON(payload, ms) {
+            const res = await fetchWithTimeout(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload)
-            })
-            .then(() => {
-                showToast("Synced to Cloud Backend!");
-                setTimeout(fetchCloudData, 1000); // Quick refresh after write
-            })
-            .catch(err => console.error("Sync error:", err));
+            }, ms || 45000);
+            const data = await parseJSONResponse(res);
+            if (data.status !== 'success') {
+                const err = new Error(data.message || 'Server error');
+                err.code = data.code; err.photos = data.photos;
+                throw err;
+            }
+            return data;
         }
 
-        function switchTab(tab) {
-            if (window.innerWidth < 1024) toggleMobileSidebar(); // Auto close on mobile
-            if (tab === 'internal' && !isBRACAuthenticated) {
-                requestPIN('brac', () => executeTabSwitch('internal'));
-                return;
-            }
-            if (tab === 'payments' && !isPaymentsAuthenticated) {
-                requestPIN('tracy', () => executeTabSwitch('payments'));
-                return;
-            }
-            executeTabSwitch(tab);
-        }
-
-        function executeTabSwitch(tab) {
-            activeTab = tab;
-            ['docs', 'contract', 'internal', 'payments'].forEach(t => {
-                const nav = document.getElementById(`nav-${t}`);
-                if (t === tab) {
-                    nav.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold bg-navy-900 text-white shadow-md transition-all";
-                } else {
-                    nav.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all";
-                }
+        function applyCloud(data) {
+            let changed = false;
+            [['base', baseSnags], ['rooms', roomSnags]].forEach(([k, list]) => {
+                const m = data[k] || {};
+                list.forEach(s => {
+                    const c = m[s.id];
+                    if (!c) return;
+                    const before = JSON.stringify([s.status, s.brand, s.contractorStatus, s.bracConfirmation, s.notes, s.photos]);
+                    if (c.status) s.status = c.status;
+                    if (c.contractorStatus) s.contractorStatus = c.contractorStatus;
+                    if (c.bracConfirmation) s.bracConfirmation = c.bracConfirmation;
+                    s.brand = c.brand;
+                    s.notes = c.notes;
+                    s.photos = c.photos || [];
+                    if (before !== JSON.stringify([s.status, s.brand, s.contractorStatus, s.bracConfirmation, s.notes, s.photos])) changed = true;
+                });
             });
-            renderActiveWorkspace();
+            return changed;
         }
 
-        function requestPIN(type, onSuccess) {
-            targetAuthTarget = { type, onSuccess };
-            document.getElementById('pin-input').value = "";
-            document.getElementById('pin-error').classList.add('hidden');
-            
-            const iconBox = document.getElementById('pin-icon-box');
-            const title = document.getElementById('pin-title');
-            const desc = document.getElementById('pin-desc');
-
-            if (type === 'brac') {
-                iconBox.className = "w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl";
-                title.innerText = "BRAC Internal Restricted Access";
-                desc.innerText = "Enter PIN to unlock internal ToR specifications workspace.";
-            } else {
-                iconBox.className = "w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl";
-                title.innerText = "Procurement & Payments Security";
-                desc.innerText = "Restricted to Tracy & Procurement. Enter PIN.";
-            }
-
-            document.getElementById('pin-modal').classList.remove('hidden');
-            document.getElementById('pin-input').focus();
-        }
-
-        function closePinModal() {
-            document.getElementById('pin-modal').classList.add('hidden');
-            targetAuthTarget = null;
-        }
-
-        function verifyPIN(e) {
-            e.preventDefault();
-            const val = document.getElementById('pin-input').value.trim();
-
-            if (targetAuthTarget.type === 'brac' && val === PIN_BRAC) {
-                isBRACAuthenticated = true;
-                document.getElementById('lock-icon-internal').className = "fa-solid fa-lock-open text-emerald-400 text-xs";
-                document.getElementById('pin-modal').classList.add('hidden');
-                document.getElementById('btn-lock-all').classList.remove('hidden');
-                showToast("BRAC Internal Workspace Unlocked.");
-                if (targetAuthTarget.onSuccess) targetAuthTarget.onSuccess();
-            } else if (targetAuthTarget.type === 'tracy' && val === PIN_TRACY) {
-                isPaymentsAuthenticated = true;
-                document.getElementById('lock-icon-payments').className = "fa-solid fa-lock-open text-emerald-400 text-xs";
-                document.getElementById('pin-modal').classList.add('hidden');
-                document.getElementById('btn-lock-all').classList.remove('hidden');
-                showToast("Procurement & Payments Workspace Unlocked.");
-                if (targetAuthTarget.onSuccess) targetAuthTarget.onSuccess();
-            } else {
-                document.getElementById('pin-error').classList.remove('hidden');
+        async function loadFromCloud(manual) {
+            if (pendingSaves > 0) return;
+            setSync('syncing');
+            try {
+                const res = await fetchWithTimeout(APPS_SCRIPT_URL + '?action=getAll&t=' + Date.now(), {}, 30000);
+                const data = await parseJSONResponse(res);
+                if (data.status !== 'success') throw new Error('The deployed script is the OLD version (it has no "getAll"). Deploy > Manage deployments > Edit > New version > Deploy.');
+                if (pendingSaves > 0) return; // an upload/save started while this was loading: ignore the stale copy
+                hideBanner();
+                try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+                const changed = applyCloud(data);
+                lastSync = new Date();
+                setSync('ok');
+                if (changed || firstLoad) refreshView();
+                firstLoad = false;
+                if (manual) showToast('Refreshed from Google Sheet & Drive.');
+            } catch (err) {
+                console.error('Cloud load failed:', err);
+                setSync('offline');
+                showBanner('Not connected to Google Sheet/Drive: ' + friendlyError(err));
+                if (manual) showToast('Could not reach Google - showing last saved data.');
             }
         }
 
-        function lockAllSessions() {
-            isBRACAuthenticated = false;
-            isPaymentsAuthenticated = false;
-            document.getElementById('lock-icon-internal').className = "fa-solid fa-lock text-amber-400 text-xs";
-            document.getElementById('lock-icon-payments').className = "fa-solid fa-lock text-emerald-400 text-xs";
-            document.getElementById('btn-lock-all').classList.add('hidden');
-            switchTab('docs');
-            showToast("All restricted sessions locked.");
+        function setSync(state) {
+            const el = document.getElementById('sync-status');
+            if (!el) return;
+            const base = 'text-xs px-3 py-1.5 rounded-xl font-mono flex items-center space-x-1.5 border ';
+            if (state === 'syncing') {
+                el.className = base + 'text-amber-300 bg-amber-950 border-amber-800';
+                el.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Syncing...</span>';
+            } else if (state === 'ok') {
+                const t = lastSync ? lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                el.className = base + 'text-emerald-300 bg-emerald-950 border-emerald-800';
+                el.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i><span>Live &middot; ${t}</span>`;
+            } else {
+                el.className = base + 'text-rose-300 bg-rose-950 border-rose-800';
+                el.innerHTML = '<i class="fa-solid fa-cloud-bolt"></i><span>Offline - saved data</span>';
+            }
         }
 
-        function triggerFileUpload(inputId) {
-            document.getElementById(inputId).click();
+        function updateBadges() {
+            document.getElementById('badge-base').innerText = baseSnags.length;
+            document.getElementById('badge-rooms').innerText = roomSnags.length;
+            const all = [...baseSnags, ...roomSnags];
+            const done = all.filter(s => s.status === 'Completed' || s.bracConfirmation === 'Confirmed').length;
+            const pct = all.length === 0 ? 0 : Math.round((done / all.length) * 100);
+            document.getElementById('completion-rate').innerText = pct + '% Resolved';
+            document.getElementById('progress-bar').style.width = pct + '%';
         }
 
-        function openLinkModal() {
-            document.getElementById('link-modal').classList.remove('hidden');
-        }
-
-        function closeLinkModal() {
-            document.getElementById('link-modal').classList.add('hidden');
-        }
-
-        function saveDocLink(e) {
-            e.preventDefault();
-            const title = document.getElementById('link-title').value.trim();
-            const url = document.getElementById('link-url').value.trim();
-
-            syncToGoogleSheets({ 
-                workspace: "1",
-                sheetName: "BOMA-BRAC DOCUMENTATION AND APPROVALS",
-                fileName: title, 
-                fileType: "URL Link", 
-                fileData: url,
-                uploadedBy: "Kateline (BRAC Directives Link)"
+        function switchWorkspace(ws) {
+            currentWorkspace = ws;
+            ['base', 'rooms'].forEach(k => {
+                document.getElementById('nav-' + k).className = k === ws ?
+                    "flex-1 lg:flex-none flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl text-xs font-semibold bg-brac-900 text-white shadow-md transition-all" :
+                    "flex-1 lg:flex-none flex items-center justify-between px-3 sm:px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all";
             });
-            
-            closeLinkModal();
-            showToast("Documentation link uploaded to cloud.");
+            renderWorkspace();
         }
 
-        // Handles Converting File to Base64 and Dispatching to Google Sheets
-        function handleFileUpload(event, category) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
+        /* ---------- Field edits (only the changed field is sent, so devices never overwrite each other) ---------- */
+        function updateItem(ws, idx, field, value) {
+            const s = listOf(ws)[idx];
+            s[field] = value;
+            updateBadges();
+            pendingSaves++;
+            setSync('syncing');
+            postJSON({ action: 'updateStatus', workspace: ws, id: s.id, [field]: value })
+                .then(() => showToast(s.id + ' saved to Google Sheet.'))
+                .catch(err => { console.error(err); showToast('Save FAILED for ' + s.id + ' - check connection and retry.'); })
+                .finally(() => { pendingSaves--; if (pendingSaves === 0) setSync(lastSync ? 'ok' : 'offline'); });
+        }
 
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const ext = file.name.split('.').pop().toUpperCase();
-                const reader = new FileReader();
+        /* ---------- Photos: up to 5 per item, several at once, stored in Drive ---------- */
+        const pk = (ws, id) => ws + ':' + id;
 
-                reader.onload = function(e) {
-                    const base64Data = e.target.result; // Full Base64 image/PDF string
+        function readAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = () => reject(new Error('Could not read file'));
+                r.readAsDataURL(file);
+            });
+        }
 
-                    if (category === 'boma') {
-                        if (ext !== 'PDF' && ext !== 'JPEG' && ext !== 'JPG' && ext !== 'PNG') {
-                            alert("BOMA Approvals section accepts PDF, JPEG, or PNG formats.");
-                            return;
-                        }
-                        syncToGoogleSheets({ 
-                            workspace: "1",
-                            sheetName: "BOMA-BRAC DOCUMENTATION AND APPROVALS",
-                            fileName: file.name, 
-                            fileType: ext, 
-                            fileData: base64Data, // Save actual photo data string
-                            uploadedBy: "Kateline (BOMA Statutory)"
-                        });
-                        showToast("Uploading " + file.name + " to Cloud Backend...");
-                    } else if (category === 'brac') {
-                        syncToGoogleSheets({ 
-                            workspace: "1",
-                            sheetName: "BOMA-BRAC DOCUMENTATION AND APPROVALS",
-                            fileName: file.name, 
-                            fileType: ext + " File", 
-                            fileData: base64Data, // Save actual photo data string
-                            uploadedBy: "Kateline (BRAC Directive)"
-                        });
-                        showToast("Uploading " + file.name + " to Cloud Backend...");
-                    }
+        function compressImage(file, maxDim, quality) {
+            return new Promise((resolve, reject) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    URL.revokeObjectURL(url);
+                    resolve({ dataUrl: c.toDataURL('image/jpeg', quality), mime: 'image/jpeg' });
                 };
-                reader.readAsDataURL(file);
+                img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')); };
+                img.src = url;
+            });
+        }
+
+        async function prepareFile(file) {
+            const LIMIT = 8 * 1024 * 1024;
+            if (file.type === 'application/pdf') {
+                if (file.size > LIMIT) throw new Error('PDF too large (max 8 MB)');
+                return { dataUrl: await readAsDataURL(file), mime: 'application/pdf' };
+            }
+            try { return await compressImage(file, 1600, 0.8); }
+            catch (e) {
+                if (file.size > LIMIT) throw new Error('Image could not be processed');
+                return { dataUrl: await readAsDataURL(file), mime: file.type || 'image/jpeg' };
             }
         }
 
-        function uploadTrancheInvoice(index, event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result;
-                syncToGoogleSheets({
-                    workspace: "4",
-                    sheetName: "Procurement & Payments",
-                    trancheTitle: procurementTranches[index].title,
-                    amount: procurementTranches[index].amount,
-                    status: procurementTranches[index].status,
-                    invoiceUrl: base64Data,
-                    comments: procurementTranches[index].comments
-                });
-                showToast("Uploading invoice to cloud...");
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function uploadInternalDoc(index, event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result;
-                syncToGoogleSheets({
-                    workspace: "3",
-                    sheetName: "BRAC Internal Tracker (Tor Specs)",
-                    refCode: internalDeliberations[index].id,
-                    topic: internalDeliberations[index].topic,
-                    owner: internalDeliberations[index].owner,
-                    status: internalDeliberations[index].status,
-                    notes: internalDeliberations[index].notes,
-                    attachmentUrl: base64Data
-                });
-                showToast("Attaching document to cloud...");
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function viewFile(name, type, data, isLink) {
-            if (isLink) {
-                window.open(data, '_blank');
+        async function handlePhotoUpload(ws, id, input) {
+            const picked = Array.from(input.files || []);
+            if (!picked.length) return;
+            const s = findItem(ws, id);
+            const k = pk(ws, id);
+            const free = MAX_PHOTOS - (s.photos.length + (uploading[k] || 0));
+            if (free <= 0) { input.value = ''; alert('Maximum of ' + MAX_PHOTOS + ' photos reached for ' + id + '.'); return; }
+            if (picked.length > free) alert('Only ' + free + ' more photo(s) allowed for ' + id + ' (max ' + MAX_PHOTOS + '). The first ' + free + ' will be uploaded.');
+            // Copy the chosen files into memory BEFORE the screen re-draws (some phones drop the file once the picker is removed)
+            const queue = [];
+            try {
+                for (const f of picked.slice(0, free)) queue.push(new File([await f.arrayBuffer()], f.name || 'photo.jpg', { type: f.type || 'image/jpeg' }));
+            } catch (err) {
+                input.value = '';
+                uploadErrors[k] = 'Could not read the selected photo: ' + err.message;
+                refreshPhotoCell(ws, id);
                 return;
             }
-            if (!data || data === "File Attached") {
-                alert("File content is currently syncing from cloud. Please retry in a moment.");
-                return;
+            input.value = '';
+            delete uploadErrors[k];
+
+            uploading[k] = (uploading[k] || 0) + queue.length;
+            refreshPhotoCell(ws, id);
+            pendingSaves++;
+            setSync('syncing');
+            let ok = 0, fail = 0, lastErr = '';
+
+            for (const file of queue) {
+                try {
+                    const prepared = await prepareFile(file);
+                    const data = await postJSON({
+                        action: 'uploadImage', workspace: ws, id: id,
+                        itemLabel: ws === 'base' ? s.desc : s.roomName,
+                        base64Data: prepared.dataUrl, mimeType: prepared.mime
+                    }, 120000);
+                    s.photos = data.photos; ok++;
+                } catch (err) {
+                    console.error('Upload failed:', err);
+                    fail++; lastErr = friendlyError(err);
+                    uploadErrors[k] = lastErr;
+                    if (err.photos) s.photos = err.photos;
+                }
+                uploading[k]--;
+                refreshPhotoCell(ws, id);
             }
-            const modal = document.getElementById('file-modal');
-            const title = document.getElementById('file-modal-title');
-            const content = document.getElementById('file-modal-content');
-            title.innerText = "Document Preview: " + name;
+            pendingSaves--;
+            setSync(lastSync ? 'ok' : 'offline');
+            if (fail === 0) showToast(ok + ' photo(s) saved to Drive for ' + id + '.');
+            else showToast(ok + ' saved, ' + fail + ' FAILED (' + lastErr + '). Not stored - please retry.');
+        }
 
-            if (data && (type.includes('JPEG') || type.includes('JPG') || type.includes('PNG') || name.match(/\.(jpeg|jpg|png|gif)$/i))) {
-                content.innerHTML = '<img src="' + data + '" alt="Preview" class="max-h-[400px] object-contain rounded-lg border shadow-sm mx-auto" />';
-            } else if (data && (type.includes('PDF') || name.match(/\.pdf$/i))) {
-                content.innerHTML = '<iframe src="' + data + '" class="w-full h-[400px] rounded-lg border"></iframe>';
-            } else {
-                content.innerHTML = '<div class="text-center p-6 space-y-3"><i class="fa-solid fa-file-lines text-4xl text-navy-900"></i><p class="font-bold text-slate-800">' + name + '</p><p class="text-slate-500 text-xs">Document format: ' + type + '</p><a href="' + data + '" download="' + name + '" class="inline-block px-4 py-2 bg-brand-500 text-white font-semibold rounded-xl text-xs shadow">Download File</a></div>';
+        async function removePhoto(ws, id, fileId) {
+            if (!confirm('Remove this photo? It will be moved to the Drive trash.')) return;
+            const s = findItem(ws, id);
+            pendingSaves++;
+            try {
+                const data = await postJSON({ action: 'deletePhoto', workspace: ws, id: id, fileId: fileId });
+                s.photos = data.photos;
+                showToast('Photo removed.');
+            } catch (err) {
+                console.error(err);
+                showToast('Could not remove photo - check connection.');
             }
-            modal.classList.remove('hidden');
+            pendingSaves--;
+            refreshPhotoCell(ws, id);
         }
 
-        function closeFileModal() {
-            document.getElementById('file-modal').classList.add('hidden');
+        function photoCellHTML(ws, s) {
+            const photos = s.photos || [];
+            const up = uploading[pk(ws, s.id)] || 0;
+            const used = photos.length + up;
+            const thumbs = photos.map((p, i) => `
+                <div class="relative w-11 h-11 shrink-0">
+                    <button onclick="openPreview('${ws}','${s.id}',${i})" class="relative w-11 h-11 rounded-lg overflow-hidden border border-brac-200 bg-brac-50 flex items-center justify-center">
+                        <span class="text-[10px] font-bold text-brac-800">#${i + 1}</span>
+                        <img src="${thumbUrl(p.id, 200)}" loading="lazy" alt="Photo ${i + 1}" class="absolute inset-0 w-full h-full object-cover" onerror="this.remove()">
+                    </button>
+                    <button onclick="removePhoto('${ws}','${s.id}','${p.id}')" title="Remove photo" class="absolute -top-1.5 -right-1.5 bg-rose-600 text-white rounded-full w-4 h-4 text-[10px] leading-4 text-center shadow">&times;</button>
+                </div>`).join('');
+            const spinners = Array(up).fill(`
+                <div class="w-11 h-11 rounded-lg border border-dashed border-brac-400 bg-brac-50 flex items-center justify-center">
+                    <i class="fa-solid fa-spinner fa-spin text-brac-700"></i>
+                </div>`).join('');
+            const action = used < MAX_PHOTOS ? `
+                <label class="cursor-pointer inline-flex items-center px-2.5 py-1 bg-brac-900 hover:bg-brac-800 text-white rounded text-[11px] font-semibold shadow">
+                    <i class="fa-solid fa-camera mr-1"></i> Add Photos (${used}/${MAX_PHOTOS})
+                    <input type="file" multiple accept="image/*,.pdf" class="hidden" onchange="handlePhotoUpload('${ws}','${s.id}',this)">
+                </label>` : `<span class="text-[10px] text-amber-600 font-semibold">Max ${MAX_PHOTOS} photos reached</span>`;
+            const errLine = uploadErrors[pk(ws, s.id)] ? `<div class="mt-1.5 text-[10px] leading-snug text-rose-700 bg-rose-50 border border-rose-200 rounded px-2 py-1">Upload NOT saved: ${esc(uploadErrors[pk(ws, s.id)])}</div>` : '';
+            return `<div class="flex flex-wrap gap-1.5 mb-1.5">${thumbs}${spinners}</div>${action}${errLine}`;
         }
 
-        function updateBoqItemStatus(index, val) {
-            boqPhasesData[index].status = val;
-            syncToGoogleSheets({
-                workspace: "2",
-                sheetName: "Contract Tracker (BoQ Phases)",
-                phaseName: boqPhasesData[index].item,
-                amount: boqPhasesData[index].confirmed,
-                status: val,
-                notes: boqPhasesData[index].comment
-            });
+        function refreshPhotoCell(ws, id) {
+            const el = document.getElementById('ph-' + ws + '-' + id);
+            const s = findItem(ws, id);
+            if (el && s) el.innerHTML = photoCellHTML(ws, s);
         }
 
-        function updateBoqItemConfirmation(index, val) {
-            boqPhasesData[index].confirmed = val;
-            syncToGoogleSheets({
-                workspace: "2",
-                sheetName: "Contract Tracker (BoQ Phases)",
-                phaseName: boqPhasesData[index].item,
-                amount: val,
-                status: boqPhasesData[index].status,
-                notes: boqPhasesData[index].comment
-            });
+        /* ---------- Preview gallery ---------- */
+        let pv = { ws: null, id: null, i: 0 };
+
+        function openPreview(ws, id, i) {
+            pv = { ws, id, i };
+            renderPreview();
+            document.getElementById('preview-modal').classList.remove('hidden');
         }
 
-        function updateBoqItemComment(index, val) {
-            boqPhasesData[index].comment = val;
-            syncToGoogleSheets({
-                workspace: "2",
-                sheetName: "Contract Tracker (BoQ Phases)",
-                phaseName: boqPhasesData[index].item,
-                amount: boqPhasesData[index].confirmed,
-                status: boqPhasesData[index].status,
-                notes: val
-            });
+        function stepPreview(d) {
+            const n = findItem(pv.ws, pv.id).photos.length;
+            if (!n) return;
+            pv.i = (pv.i + d + n) % n;
+            renderPreview();
         }
 
-        function updateInternalNote(index, value) {
-            internalDeliberations[index].notes = value;
-            syncToGoogleSheets({ 
-                workspace: "3",
-                sheetName: "BRAC Internal Tracker (Tor Specs)",
-                refCode: internalDeliberations[index].id, 
-                topic: internalDeliberations[index].topic, 
-                owner: internalDeliberations[index].owner,
-                status: internalDeliberations[index].status, 
-                notes: value, 
-                attachmentUrl: internalDeliberations[index].docLink 
-            });
+        function renderPreview() {
+            const photos = findItem(pv.ws, pv.id).photos;
+            const body = document.getElementById('preview-body');
+            if (!photos.length) { closePreviewModal(); return; }
+            if (pv.i >= photos.length) pv.i = 0;
+            const p = photos[pv.i];
+            document.getElementById('preview-title').innerText = `Evidence - ${pv.id} (${pv.i + 1}/${photos.length})`;
+            body.innerHTML = `
+                <div class="w-full text-center space-y-3">
+                    <img src="${thumbUrl(p.id, 1600)}" alt="Evidence photo" class="max-h-[380px] object-contain rounded-lg border shadow-sm mx-auto" onerror="this.alt='Preview not available - open in Drive'">
+                    <div class="flex items-center justify-center space-x-2">
+                        <button onclick="stepPreview(-1)" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-semibold"><i class="fa-solid fa-chevron-left"></i></button>
+                        <a href="${p.url}" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 px-4 py-1.5 bg-brac-900 text-white text-xs rounded-lg shadow hover:bg-brac-800"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>Open in Google Drive</span></a>
+                        <button onclick="stepPreview(1)" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-semibold"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>`;
         }
 
-        function updateInternalStatus(index, value) {
-            internalDeliberations[index].status = value;
-            syncToGoogleSheets({ 
-                workspace: "3",
-                sheetName: "BRAC Internal Tracker (Tor Specs)",
-                refCode: internalDeliberations[index].id, 
-                topic: internalDeliberations[index].topic, 
-                owner: internalDeliberations[index].owner,
-                status: value, 
-                notes: internalDeliberations[index].notes, 
-                attachmentUrl: internalDeliberations[index].docLink 
-            });
-        }
-
-        function updateTrancheStatus(index, value) {
-            procurementTranches[index].status = value;
-            syncToGoogleSheets({ 
-                workspace: "4",
-                sheetName: "Procurement & Payments",
-                trancheTitle: procurementTranches[index].title, 
-                amount: procurementTranches[index].amount, 
-                status: value, 
-                invoiceUrl: procurementTranches[index].doc, 
-                comments: procurementTranches[index].comments 
-            });
-        }
-
-        function updateTrancheComment(index, value) {
-            procurementTranches[index].comments = value;
-            syncToGoogleSheets({ 
-                workspace: "4",
-                sheetName: "Procurement & Payments",
-                trancheTitle: procurementTranches[index].title, 
-                amount: procurementTranches[index].amount, 
-                status: procurementTranches[index].status, 
-                invoiceUrl: procurementTranches[index].doc, 
-                comments: value 
-            });
-        }
+        function closePreviewModal() { document.getElementById('preview-modal').classList.add('hidden'); }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-message').innerText = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3500);
         }
 
-        function renderActiveWorkspace() {
+        /* ---------- Rendering ---------- */
+        function selectHTML(options, value, onchange) {
+            return `<select onchange="${onchange}" class="bg-slate-100 border rounded-lg px-2 py-1 text-xs font-semibold">` +
+                options.map(o => `<option value="${esc(o)}" ${value === o ? 'selected' : ''}>${esc(o)}</option>`).join('') + `</select>`;
+        }
+        const STATUS_OPTS = ['Not Started', 'Ongoing', 'Pending', 'Completed'];
+        const CONFIRM_OPTS = ['Pending Confirmation', 'Confirmed', 'Rejected'];
+
+        function refreshView() {
+            updateBadges();
+            const a = document.activeElement;
+            const typing = a && document.getElementById('main-content').contains(a) && (a.tagName === 'INPUT' || a.tagName === 'SELECT');
+            if (typing) { listOf(currentWorkspace).forEach(s => refreshPhotoCell(currentWorkspace, s.id)); }
+            else { renderWorkspace(); }
+        }
+
+        function renderWorkspace() {
             const container = document.getElementById('main-content');
-            if (activeTab === 'docs') renderWorkspace1(container);
-            else if (activeTab === 'contract') renderWorkspace2(container);
-            else if (activeTab === 'internal') renderWorkspace3(container);
-            else if (activeTab === 'payments') renderWorkspace4(container);
+            if (currentWorkspace === 'base') renderBaseWorkspace(container); else renderRoomsWorkspace(container);
+            updateBadges();
         }
 
-        // Workspace 1: BOMA-BRAC Documentation Approvals
-        function renderWorkspace1(container) {
-            let htmlBomaList = docsBOMA.length === 0 ? '<p class="text-xs text-slate-400 italic py-3 text-center">No BOMA statutory approvals uploaded yet (PDF, JPEG).</p>' : docsBOMA.map((d, idx) => `
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                    <div class="flex items-center space-x-3 overflow-hidden">
-                        <i class="fa-solid fa-file-pdf text-rose-500 text-lg shrink-0"></i>
-                        <div class="truncate">
-                            <p class="font-semibold text-slate-900 leading-snug truncate">${d.name}</p>
-                            <p class="text-[10px] text-slate-400">${d.size} • Uploaded by ${d.uploader || 'User'} on ${d.date}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2 shrink-0">
-                        <button onclick="viewFile('${d.name}', '${d.type}', '${d.data}', false)" class="text-slate-500 hover:text-navy-900 p-1" title="View / Download"><i class="fa-solid fa-eye"></i></button>
-                    </div>
-                </div>
-            `).join('');
-
-            let htmlBracList = docsBRAC.length === 0 ? '<p class="text-xs text-slate-400 italic py-3 text-center">No BRAC ToR, directives, or documentation links uploaded yet.</p>' : docsBRAC.map((d, idx) => `
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                    <div class="flex items-center space-x-3 overflow-hidden">
-                        <i class="${d.isLink ? 'fa-solid fa-link text-blue-500' : 'fa-solid fa-file-contract text-navy-800'} text-lg shrink-0"></i>
-                        <div class="truncate">
-                            <p class="font-semibold text-slate-900 leading-snug truncate">${d.name}</p>
-                            <p class="text-[10px] text-slate-400">${d.format} • ${d.date}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2 shrink-0">
-                        <button onclick="viewFile('${d.name}', '${d.format}', '${d.data}', ${d.isLink})" class="text-slate-500 hover:text-navy-900 p-1" title="Open"><i class="${d.isLink ? 'fa-solid fa-arrow-up-right-from-square' : 'fa-solid fa-eye'}"></i></button>
-                    </div>
-                </div>
-            `).join('');
-
+        function renderBaseWorkspace(container) {
             container.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm gap-3">
+                <div class="flex items-center justify-between bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <div>
-                        <h2 class="text-lg lg:text-xl font-bold text-slate-900">1) BOMA-BRAC Documentation Approvals</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Central repository for statutory approvals (OSHA, NCC) and BRAC ToR instructional directives.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-900">1) Entire Floor Base Fit-Out Works (BoQ V6)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Pre-compartmentation works: screed, SPC flooring, walling, ceilings, MEP first/second fix, and AC units.</p>
                     </div>
                 </div>
-                <input type="file" id="file-input-boma" accept=".pdf,.jpeg,.jpg,.png" class="hidden" onchange="handleFileUpload(event, 'boma')" multiple />
-                <input type="file" id="file-input-brac" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpeg,.png" class="hidden" onchange="handleFileUpload(event, 'brac')" multiple />
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:p-6 space-y-4 shadow-sm">
-                        <div class="flex items-center justify-between border-b pb-3">
-                            <div>
-                                <h3 class="font-bold text-sm text-slate-900">BOMA Statutory Approvals</h3>
-                                <p class="text-[11px] text-slate-400">OSHA, NCC & Landlord approval files (PDF, JPEG)</p>
-                            </div>
-                            <button onclick="triggerFileUpload('file-input-boma')" class="px-3 py-1.5 bg-brand-500 text-white font-semibold text-xs rounded-xl shadow"><i class="fa-solid fa-plus mr-1"></i> Upload</button>
-                        </div>
-                        <div class="space-y-2">${htmlBomaList}</div>
-                    </div>
-
-                    <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:p-6 space-y-4 shadow-sm">
-                        <div class="flex items-center justify-between border-b pb-3">
-                            <div>
-                                <h3 class="font-bold text-sm text-slate-900">BRAC Directives & ToR Instructions</h3>
-                                <p class="text-[11px] text-slate-400">ToR documents, Word files, Sheets & web links</p>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="openLinkModal()" class="px-2.5 py-1.5 border border-slate-300 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-50"><i class="fa-solid fa-link mr-1"></i> Link</button>
-                                <button onclick="triggerFileUpload('file-input-brac')" class="px-3 py-1.5 bg-navy-900 text-white font-semibold text-xs rounded-xl shadow"><i class="fa-solid fa-plus mr-1"></i> File</button>
-                            </div>
-                        </div>
-                        <div class="space-y-2">${htmlBracList}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Workspace 2: Contract Tracker (Phased BoQ Schedule)
-        function renderWorkspace2(container) {
-            const grouped = {};
-            boqPhasesData.forEach((item, idx) => {
-                if (!grouped[item.phase]) grouped[item.phase] = [];
-                grouped[item.phase].push({ ...item, globalIdx: idx });
-            });
-
-            let htmlPhases = Object.keys(grouped).map(phaseName => `
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-                    <div class="bg-slate-800 text-white px-4 lg:px-5 py-3 font-bold text-xs flex justify-between items-center">
-                        <span><i class="fa-solid fa-layer-group text-amber-400 mr-2"></i>${phaseName}</span>
-                        <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300">${grouped[phaseName].length} Schedule Items</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse min-w-[650px]">
-                            <thead>
-                                <tr class="bg-slate-50 border-b font-bold text-slate-600 uppercase text-[10px]">
-                                    <th class="p-3 pl-5 w-16">Ref</th>
-                                    <th class="p-3">BoQ Scheduled Task / Item Description</th>
-                                    <th class="p-3 w-36">Work Status</th>
-                                    <th class="p-3 w-40">Client BRAC</th>
-                                    <th class="p-3 pr-5 w-64">Client Comments / Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                ${grouped[phaseName].map(i => `
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="p-3 pl-5 font-mono font-bold text-blue-600">${i.id}</td>
-                                        <td class="p-3 font-medium text-slate-900">${i.item}</td>
-                                        <td class="p-3">
-                                            <select onchange="updateBoqItemStatus(${i.globalIdx}, this.value)" class="bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold">
-                                                <option value="Pending" ${i.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                                <option value="Commenced" ${i.status === 'Commenced' ? 'selected' : ''}>Commenced</option>
-                                                <option value="Ongoing" ${i.status === 'Ongoing' ? 'selected' : ''}>Ongoing</option>
-                                                <option value="Completed" ${i.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                                            </select>
-                                        </td>
-                                        <td class="p-3">
-                                            <select onchange="updateBoqItemConfirmation(${i.globalIdx}, this.value)" class="bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold">
-                                                <option value="Pending Confirmation" ${i.confirmed === 'Pending Confirmation' ? 'selected' : ''}>Pending Confirmation</option>
-                                                <option value="Confirmed" ${i.confirmed === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                                            </select>
-                                        </td>
-                                        <td class="p-3 pr-5"><input type="text" value="${i.comment}" onchange="updateBoqItemComment(${i.globalIdx}, this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs"></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = `
-                <div class="flex items-center justify-between bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div>
-                        <h2 class="text-lg lg:text-xl font-bold text-slate-900">2) Contract Tracker (Phased BoQ Works)</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Phased execution tracking according to settled BoQ schedule items and client verification.</p>
-                    </div>
-                </div>
-                <div>${htmlPhases}</div>
-            `;
-        }
-
-        // Workspace 3: BRAC Internal Tracker (ToR Spatial Specs & Deliberations)
-        function renderWorkspace3(container) {
-            container.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm gap-2">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h2 class="text-lg lg:text-xl font-bold text-slate-900">3) BRAC Internal Tracker</h2>
-                            <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200">UNLOCKED</span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">Tracks internal pre-commencement deliberations and spatial specs.</p>
-                    </div>
-                </div>
-
-                <!-- Spatial Zoning Summary Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:p-5 shadow-sm space-y-3">
-                        <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2"><i class="fa-solid fa-building text-brand-500"></i> Primary Operational Zone (7,880 sq ft)</h3>
-                        <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-4 leading-relaxed">
-                            <li><strong>Executive Suite:</strong> 1 Director Corner Suite with internal washroom & double glazed glass.</li>
-                            <li><strong>Director Offices:</strong> Finance & HR (4 pax), Operations (8 pax) with 1400x600mm desks.</li>
-                            <li><strong>Private Officer Offices:</strong> 10 smaller suites for Cluster Leads & Heads of Dept.</li>
-                            <li><strong>Open Clusters:</strong> Programmes (24 pax), Microfinance (14 pax), UPGI (11 pax).</li>
-                            <li><strong>Boardroom & Pods:</strong> 60-pax divisible boardroom (4x10 pax split) + 8 soundproof phone pods.</li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-white rounded-2xl border border-slate-200 p-4 lg:p-5 shadow-sm space-y-3">
-                        <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2"><i class="fa-solid fa-truck-ramp-box text-emerald-600"></i> Secondary Service & Support Zone</h3>
-                        <ul class="text-xs text-slate-600 space-y-1.5 list-disc pl-4 leading-relaxed">
-                            <li><strong>Independent Entrance:</strong> Direct pathway for catering deliveries bypassing operational zone.</li>
-                            <li><strong>Cloakroom & Utility:</strong> Dedicated storage and cloakroom for 3 service staff.</li>
-                            <li><strong>Mother's Room:</strong> Fitted for 3-seater couch & dedicated small refrigerator.</li>
-                            <li><strong>ICT Server Room:</strong> MikroTik CCR1036, Cisco 9200L stack, 2kW spare load & Haier 18k BTU A/C.</li>
-                            <li><strong>Kitchenette & Dining:</strong> Plumbing for sink, dishwasher, kettle & microwave.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Internal Deliberations Log Table -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                        <span class="font-bold text-xs text-slate-700">Internal Deliberations & Attachments</span>
-                        <button onclick="openLinkModal()" class="px-2.5 py-1 bg-navy-900 text-white font-semibold text-[11px] rounded-lg shadow"><i class="fa-solid fa-link mr-1"></i> Add Link</button>
+                        <span class="font-bold text-xs text-slate-700">Base Floor Master Register (${baseSnags.length} Items)</span>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+                        <table class="w-full text-left text-xs border-collapse min-w-[1150px]">
                             <thead>
                                 <tr class="bg-slate-100 border-b font-bold text-slate-600 uppercase text-[10px]">
-                                    <th class="p-3 pl-5 w-16">Ref</th>
-                                    <th class="p-3">Topic / Specification Item</th>
-                                    <th class="p-3 w-28">Owner</th>
+                                    <th class="p-3 pl-5 w-16">Ref ID</th>
+                                    <th class="p-3">BoQ Description / Element</th>
+                                    <th class="p-3 w-32">Category</th>
                                     <th class="p-3 w-28">Status</th>
-                                    <th class="p-3">Deliberation Notes & Recommendations</th>
-                                    <th class="p-3 pr-5 w-44">Attachment / Doc</th>
+                                    <th class="p-3 w-36">Brand / Make</th>
+                                    <th class="p-3 w-16">Unit</th>
+                                    <th class="p-3 w-16">Qty</th>
+                                    <th class="p-3 w-36">Contractor Status</th>
+                                    <th class="p-3 w-36">BRAC Contentment</th>
+                                    <th class="p-3 w-64">Photos (max ${MAX_PHOTOS}, Drive)</th>
+                                    <th class="p-3 pr-5 w-48">BRAC Verification Notes</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                ${internalDeliberations.map((item, idx) => `
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="p-3 pl-5 font-mono font-bold text-amber-600">${item.id}</td>
-                                        <td class="p-3 font-semibold text-slate-900">${item.topic}</td>
-                                        <td class="p-3 text-slate-600">${item.owner}</td>
-                                        <td class="p-3">
-                                            <select onchange="updateInternalStatus(${idx}, this.value)" class="bg-slate-100 border rounded-lg px-2 py-1 text-xs font-medium">
-                                                <option value="In Progress" ${item.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                                                <option value="Approved" ${item.status === 'Approved' ? 'selected' : ''}>Approved</option>
-                                                <option value="Completed" ${item.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                                            </select>
-                                        </td>
-                                        <td class="p-3"><input type="text" value="${item.notes}" onchange="updateInternalNote(${idx}, this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs" placeholder="Add recommendation or note..."></td>
-                                        <td class="p-3 pr-5">
-                                            <input type="file" id="int-doc-${idx}" class="hidden" onchange="uploadInternalDoc(${idx}, event)" />
-                                            ${item.docLink ? `
-                                                <div class="flex items-center space-x-1.5">
-                                                    <button onclick="viewFile('${item.docLink}', 'File', '${item.data}', false)" class="text-blue-600 hover:underline truncate text-[11px] font-semibold max-w-[100px]" title="${item.docLink}">${item.docLink}</button>
-                                                </div>
-                                            ` : `
-                                                <button onclick="triggerFileUpload('int-doc-${idx}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border text-slate-700 text-[11px] rounded-md font-semibold"><i class="fa-solid fa-upload mr-1"></i>Attach</button>
-                                            `}
-                                        </td>
+                                ${baseSnags.map((s, idx) => `
+                                    <tr class="hover:bg-slate-50 align-top">
+                                        <td class="p-3 pl-5 font-mono font-bold text-brac-900">${esc(s.id)}</td>
+                                        <td class="p-3 font-medium text-slate-900">${esc(s.desc)}</td>
+                                        <td class="p-3 text-slate-600">${esc(s.category)}</td>
+                                        <td class="p-3">${selectHTML(STATUS_OPTS, s.status, `updateItem('base',${idx},'status',this.value)`)}</td>
+                                        <td class="p-3"><input type="text" value="${esc(s.brand)}" onchange="updateItem('base',${idx},'brand',this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs"></td>
+                                        <td class="p-3 font-semibold text-slate-600">${esc(s.unit)}</td>
+                                        <td class="p-3 font-mono">${esc(s.qty)}</td>
+                                        <td class="p-3"><input type="text" value="${esc(s.contractorStatus)}" onchange="updateItem('base',${idx},'contractorStatus',this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs"></td>
+                                        <td class="p-3">${selectHTML(CONFIRM_OPTS, s.bracConfirmation, `updateItem('base',${idx},'bracConfirmation',this.value)`)}</td>
+                                        <td class="p-3" id="ph-base-${esc(s.id)}">${photoCellHTML('base', s)}</td>
+                                        <td class="p-3 pr-5"><input type="text" value="${esc(s.notes)}" onchange="updateItem('base',${idx},'notes',this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs" placeholder="Add verification note..."></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        // Workspace 4: Procurement & Payments
-        function renderWorkspace4(container) {
+        function renderRoomsWorkspace(container) {
             container.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm gap-2">
+                <div class="flex items-center justify-between bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h2 class="text-lg lg:text-xl font-bold text-slate-900">4) Procurement & Payments</h2>
-                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200">UNLOCKED</span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">Pre-commencement financial tranches and payment ledger.</p>
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-900">2) Compartment & Room Audit (ToR & Option 04 Layout)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Room-by-room inspection checklist aligned with functional zoning, room dimensions, and brand specifications.</p>
                     </div>
                 </div>
-
-                <!-- Financial Budget Overview Card -->
-                <div class="bg-slate-900 text-white p-4 lg:p-5 rounded-2xl border border-slate-800 shadow space-y-4">
-                    <div class="flex flex-wrap justify-between items-center text-xs gap-3">
-                        <div>
-                            <p class="text-slate-400 text-[11px]">Total Settled BoQ Budget Envelope</p>
-                            <p class="text-lg lg:text-xl font-mono font-bold text-white mt-0.5">KES 24,782,414 <span class="text-xs text-slate-400 font-normal">(Incl. 16% VAT)</span></p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400 text-[11px]">Offset Payments Made To Date</p>
-                            <p class="text-lg lg:text-xl font-mono font-bold text-emerald-400 mt-0.5">KES 0 <span class="text-xs text-slate-400 font-normal">(0% Disbursed)</span></p>
-                        </div>
-                        <div>
-                            <p class="text-slate-400 text-[11px]">Current Financial Status</p>
-                            <p class="text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-lg mt-1 inline-block">Pre-Commencement Stage</p>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-                            <span>Disbursement Progress</span>
-                            <span>KES 0 / KES 24,782,414 (0%)</span>
-                        </div>
-                        <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700">
-                            <div class="bg-emerald-500 h-full rounded-full" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Payments Table -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="p-4 bg-slate-50 border-b font-bold text-xs text-slate-700">Scheduled Payment Tranches, Invoices & Offset Ledger</div>
+                    <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                        <span class="font-bold text-xs text-slate-700">Room Audit Register (${roomSnags.length} Spaces)</span>
+                    </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+                        <table class="w-full text-left text-xs border-collapse min-w-[1250px]">
                             <thead>
                                 <tr class="bg-slate-100 border-b font-bold text-slate-600 uppercase text-[10px]">
-                                    <th class="p-3 pl-5">Tranche Title</th>
-                                    <th class="p-3 w-32">Amount (KES)</th>
-                                    <th class="p-3 w-40">Disbursement Status</th>
-                                    <th class="p-3 w-48">Upload Invoice / Receipt</th>
-                                    <th class="p-3 pr-5">Contributor Comments & Offset Notes</th>
+                                    <th class="p-3 pl-5 w-16">Ref ID</th>
+                                    <th class="p-3">Compartment / Room Name</th>
+                                    <th class="p-3 w-32">Zone</th>
+                                    <th class="p-3 w-28">Status</th>
+                                    <th class="p-3 w-36">Brand / Make</th>
+                                    <th class="p-3">ToR Specifications</th>
+                                    <th class="p-3 w-16">Pax</th>
+                                    <th class="p-3 w-28">Dimensions</th>
+                                    <th class="p-3 w-36">BRAC Contentment</th>
+                                    <th class="p-3 w-64">Photos (max ${MAX_PHOTOS}, Drive)</th>
+                                    <th class="p-3 pr-5 w-48">BRAC Sign-Off Remarks</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                ${procurementTranches.map((t, idx) => `
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="p-3 pl-5 font-semibold text-slate-900">${t.title}</td>
-                                        <td class="p-3 font-mono font-bold text-emerald-700">${t.amount}</td>
-                                        <td class="p-3">
-                                            <select onchange="updateTrancheStatus(${idx}, this.value)" class="bg-slate-100 border rounded-lg px-2 py-1 text-xs font-medium">
-                                                <option value="Pending Invoice / Pre-Commencement" ${t.status.includes('Pending') ? 'selected' : ''}>Pending Invoice</option>
-                                                <option value="Scheduled" ${t.status === 'Scheduled' ? 'selected' : ''}>Scheduled</option>
-                                                <option value="Disbursed" ${t.status === 'Disbursed' ? 'selected' : ''}>Disbursed</option>
-                                            </select>
-                                        </td>
-                                        <td class="p-3">
-                                            <input type="file" id="proc-doc-${idx}" class="hidden" onchange="uploadTrancheInvoice(${idx}, event)" />
-                                            ${t.doc ? `
-                                                <div class="flex items-center space-x-1.5">
-                                                    <button onclick="viewFile('${t.doc}', 'Invoice', '${t.data}', false)" class="text-blue-600 hover:underline truncate text-[11px] font-semibold max-w-[100px]" title="${t.doc}">${t.doc}</button>
-                                                </div>
-                                            ` : `
-                                                <button onclick="triggerFileUpload('proc-doc-${idx}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-[11px] rounded-md font-semibold"><i class="fa-solid fa-upload mr-1"></i>Upload File</button>
-                                            `}
-                                        </td>
-                                        <td class="p-3 pr-5">
-                                            <input type="text" value="${t.comments || ''}" onchange="updateTrancheComment(${idx}, this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs" placeholder="Enter offset note or comment...">
-                                        </td>
+                                ${roomSnags.map((s, idx) => `
+                                    <tr class="hover:bg-slate-50 align-top">
+                                        <td class="p-3 pl-5 font-mono font-bold text-brac-900">${esc(s.id)}</td>
+                                        <td class="p-3 font-semibold text-slate-900">${esc(s.roomName)}</td>
+                                        <td class="p-3 text-slate-600">${esc(s.zone)}</td>
+                                        <td class="p-3">${selectHTML(STATUS_OPTS, s.status, `updateItem('rooms',${idx},'status',this.value)`)}</td>
+                                        <td class="p-3"><input type="text" value="${esc(s.brand)}" onchange="updateItem('rooms',${idx},'brand',this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs"></td>
+                                        <td class="p-3 text-slate-600 text-[11px]">${esc(s.torSpecs)}</td>
+                                        <td class="p-3 font-semibold">${esc(s.pax)}</td>
+                                        <td class="p-3 font-mono text-slate-600">${esc(s.dimensions)}</td>
+                                        <td class="p-3">${selectHTML(CONFIRM_OPTS, s.bracConfirmation, `updateItem('rooms',${idx},'bracConfirmation',this.value)`)}</td>
+                                        <td class="p-3" id="ph-rooms-${esc(s.id)}">${photoCellHTML('rooms', s)}</td>
+                                        <td class="p-3 pr-5"><input type="text" value="${esc(s.notes)}" onchange="updateItem('rooms',${idx},'notes',this.value)" class="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs" placeholder="Add sign-off remark..."></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        // Initialize and Start Realtime Polling Loop
-        fetchCloudData();
-        setInterval(fetchCloudData, 8000); // Automatically pulls new uploads across all devices every 8s
+        /* ---------- Start-up: show last saved cloud data instantly, then fetch fresh data ---------- */
+        try { const cached = JSON.parse(localStorage.getItem(CACHE_KEY)); if (cached && cached.status === 'success') applyCloud(cached); } catch (e) {}
+        setSync('syncing');
+        renderWorkspace();
+        loadFromCloud(false);
+        setInterval(() => { if (!document.hidden) loadFromCloud(false); }, 30000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) loadFromCloud(false); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreviewModal(); });
     </script>
 </body>
 </html>
